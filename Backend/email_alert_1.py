@@ -1,3 +1,5 @@
+# When any animal is detected the video is captured and shared to a specified email id
+
 import cv2
 import os
 import smtplib
@@ -9,8 +11,8 @@ from ultralytics import YOLO
 
 # Function to send an email with an attachment
 def send_email_with_attachment(subject, body, recipient_email, attachment_path):
-    sender_email = ""  # Replace with your email
-    sender_password = ""      # Replace with your email password or app password
+    sender_email = "email"  # Replace with your email
+    sender_password = "password"      # Enable 2fa in google account and generate app password for SMTP 
 
     # Create the email
     message = MIMEMultipart()
@@ -48,9 +50,7 @@ def send_email_with_attachment(subject, body, recipient_email, attachment_path):
 model = YOLO(r"D:\Mini-Project\TF LITE MODEL\Train 1 25 dec\best.pt")  # Replace with your YOLOv8 model path
 
 # Set up video capture
-#rtsp_url="rtsp://admin:admin@192.168.129.18:1935"
-#cap = cv2.VideoCapture(rtsp_url)  # Use 0 for default webcam or provide video path
-cap = cv2.VideoCapture(0)
+cap = cv2.VideoCapture(0)  # Use 0 for default webcam or provide video path
 
 # Change to .mpeg format for video output
 out = cv2.VideoWriter("detected_animal.mkv", cv2.VideoWriter_fourcc(*'XVID'), 30, (640, 480))  # 'MPG4' codec for .mpeg format
@@ -73,7 +73,7 @@ while True:
         label = model.names[cls]  # Get class label
 
         # Only process detections with confidence > 90%
-        if conf > 0.85:
+        if conf > 0.8:
             # Get bounding box coordinates
             x1, y1, x2, y2 = map(int, box.xyxy[0].tolist())
 
@@ -101,7 +101,7 @@ while True:
     # Check if the object has been detected more than 30 times
     if detection_count >= 30 and not video_saved:
         local_file_path = "detected_animal.mkv"  # Update file extension to .mpeg
-        recipient_email = "22cs339@mgits.ac.in"  # Replace with recipient email
+        recipient_email = "22cs256@mgits.ac.in"  # Replace with recipient email
 
         # Send email with video attachment
         send_email_with_attachment(
