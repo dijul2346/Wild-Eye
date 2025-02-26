@@ -13,7 +13,7 @@ import queue
 import gc
 
 # Initialize YOLO model
-model = YOLO(r"D:\Mini-Project\Modle\v12 26-2\weights\best.pt")  # Model path
+model = YOLO(r"D:\Mini-Project\Modle\v12 26-2 2\weights\best.pt")  # Model path
 
 # Initialize video capture
 video_path = r"D:\Mini-Project\Modle\best.pt"  # 0 for webcam, or video path
@@ -39,7 +39,7 @@ detection_lock = threading.Lock()  # Lock for thread-safe access to global varia
 toast = ToastNotifier()
 
 # Output directory
-output_dir = r"D:\Mini-Project\animals\.venv\Detections"  # Output directory for detections
+output_dir = r"D:\Mini-Project\Detections"  # Output directory for detections
 os.makedirs(output_dir, exist_ok=True)
 
 # Initialize Firebase
@@ -94,7 +94,7 @@ def upload_video_async(video_path, image_path, timestamp, label, conf):
         save_detection_to_firestore(timestamp, label, image_url, video_url)
 
         # Windows notification
-        toast.show_toast("Animal Detected", f"{label} detected with confidence {conf:.2f}.", duration=10)
+        
     except Exception as e:
         print(f"Error during video upload: {e}")
     finally:
@@ -142,6 +142,11 @@ def inference_worker():
                     last_detection_time = current_time
                     last_detected_label = label
 
+                # Draw bounding box and label on the frame
+                x1, y1, x2, y2 = map(int, xyxy)  # Convert coordinates to integers
+                cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 2)  # Draw bounding box
+                cv2.putText(frame, f"{label} {conf:.2f}", (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 255, 0), 2)  # Draw label and confidence
+
                 # Save image
                 timestamp = time.strftime("%d%m%Y_%H-%M-%S")  # Replace colons with hyphens
                 image_path = os.path.join(output_dir, f"detected_{timestamp}.jpg")
@@ -152,10 +157,14 @@ def inference_worker():
                 video_path = os.path.join(output_dir, f"detected_{timestamp}.mp4")
                 print(f"Saving video to: {video_path}")  # Debug print
                 out = cv2.VideoWriter(video_path, cv2.VideoWriter_fourcc(*'mp4v'), fps, (frame.shape[1], frame.shape[0]))
+                toast.show_toast("Animal Detected", f"{label} detected with confidence {conf:.2f}.", duration=10)
 
                 # Create a copy of the frame_buffer to avoid mutation during iteration
                 buffered_frames = list(frame_buffer)  # Copy frames from the buffer
                 for buffered_frame in buffered_frames:
+                    # Draw bounding boxes on buffered frames
+                    cv2.rectangle(buffered_frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
+                    cv2.putText(buffered_frame, f"{label} {conf:.2f}", (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 255, 0), 2)
                     out.write(buffered_frame)
                 out.release()
 
