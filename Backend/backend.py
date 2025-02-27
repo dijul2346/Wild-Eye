@@ -49,10 +49,7 @@ if not firebase_admin._apps:
 db = firestore.client()
 
 # Configure Cloudinary
-cloudinary.config(
-    cloud_name="dondw5a6f", 
-    api_key="321615463764633",        
-    api_secret="6EnumTyZXO9vPoyMNxQDaonWJRo"  
+  
 )
 
 # Cloudinary upload function
