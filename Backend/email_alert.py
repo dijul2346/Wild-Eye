@@ -6,11 +6,17 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.base import MIMEBase
 from email import encoders
 from ultralytics import YOLO
+from dotenv import load_dotenv  # Added for .env support
+
+# Load environment variables from .env file
+load_dotenv(os.path.join(os.path.dirname(__file__), '.env'))
 
 # Function to send an email with an attachment
 def send_email_with_attachment(subject, body, recipient_email, attachment_path):
-    sender_email = ""  # Replace with your email
-    sender_password = ""      # Replace with your email password or app password
+    sender_email = os.getenv('SENDER_EMAIL')
+    sender_password = os.getenv('SENDER_PASSWORD')
+    # recipient_email is now passed as argument, but can be loaded from env if needed
+    # recipient_email = os.getenv('RECIPIENT_EMAIL')
 
     # Create the email
     message = MIMEMultipart()
@@ -58,6 +64,9 @@ out = cv2.VideoWriter("detected_animal.mkv", cv2.VideoWriter_fourcc(*'XVID'), 30
 video_saved = False  # Flag to avoid multiple email sends
 detection_count = 0  # Counter to track the number of detections
 
+# Use environment variable for recipient email
+default_recipient_email = os.getenv('RECIPIENT_EMAIL')
+
 while True:
     ret, frame = cap.read()
     if not ret:
@@ -101,7 +110,7 @@ while True:
     # Check if the object has been detected more than 30 times
     if detection_count >= 30 and not video_saved:
         local_file_path = "detected_animal.mkv"  # Update file extension to .mpeg
-        recipient_email = "22cs339@mgits.ac.in"  # Replace with recipient email
+        recipient_email = default_recipient_email  # Use env variable
 
         # Send email with video attachment
         send_email_with_attachment(

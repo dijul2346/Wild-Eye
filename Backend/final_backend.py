@@ -13,11 +13,15 @@ import queue
 import random
 import gc
 import numpy as np
+from dotenv import load_dotenv  # Added for .env support
 
 class AnimalDetectionBackend:
     def __init__(self):
-        # Initialize model
-        self.model = YOLO(r"D:\Mini-Project\Modle\train51\weights\best.pt")
+        # Load environment variables
+        load_dotenv(os.path.join(os.path.dirname(__file__), '.env'))
+        # Use relative paths from environment variables or fallback
+        model_path = os.getenv('MODEL_PATH', os.path.join('..', 'Model', 'best.pt'))
+        self.model = YOLO(model_path)
         
         # Video configuration
         self.cap = None
@@ -38,8 +42,8 @@ class AnimalDetectionBackend:
         # Notifications
         self.toast = ToastNotifier()
         
-        # Output directory
-        self.output_dir = r"D:\Mini-Project\Detections"
+        # Output directory (relative)
+        self.output_dir = os.getenv('OUTPUT_DIR', os.path.join('..', 'Detections'))
         os.makedirs(self.output_dir, exist_ok=True)
         
         # Initialize cloud services
@@ -52,15 +56,16 @@ class AnimalDetectionBackend:
         
     def _initialize_cloud_services(self):
         """Initialize Firebase and Cloudinary connections"""
+        firebase_credentials_path = os.getenv('FIREBASE_CREDENTIALS_PATH', os.path.join('..', '..', 'Firebase', 'wild-eye-f8551-firebase-adminsdk-fbsvc-8ff1c5d3b3.json'))
         if not firebase_admin._apps:
-            cred = credentials.Certificate(r"D:\Mini-Project\Firebase\wild-eye-f8551-firebase-adminsdk-fbsvc-8ff1c5d3b3.json")
+            cred = credentials.Certificate(firebase_credentials_path)
             firebase_admin.initialize_app(cred)
         self.db = firestore.client()
         
         cloudinary.config(
-            cloud_name="dondw5a6f",
-            api_key="321615463764633",
-            api_secret="6EnumTyZXO9vPoyMNxQDaonWJRo"
+            cloud_name=os.getenv('CLOUDINARY_CLOUD_NAME'),
+            api_key=os.getenv('CLOUDINARY_API_KEY'),
+            api_secret=os.getenv('CLOUDINARY_API_SECRET')
         )
     
     def get_random_location(self):
